@@ -736,7 +736,7 @@ Image Size          : 128 × 128
 # 🎥 시연 영상
 
 <p align="center">
-  <a href="YOUR_YOUTUBE_LINK">
+  <a href="https://youtu.be/W_Af24NF-nc">
     <img src="./images/demo_thumbnail.png" width="800">
   </a>
 </p>
