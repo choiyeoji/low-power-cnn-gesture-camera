@@ -729,73 +729,106 @@ Image Size          : 128 × 128
 
 <br>
 
-# 📂 소스코드 구조
+## 📂 소스코드 구조
 
-현재 프로젝트는 FPGA CNN 가속기, CNN Testbench, Jetson Python 코드로 구분되어 있습니다.
+FPGA 기반 사람 탐지 CNN 가속기와 Jetson 기반 제스처 인식 소스를 구분하고, CNN 기능 검증을 위한 Testbench 및 검증 데이터를 별도로 구성했습니다.
 
 ```text
-project/
-├── CNN가속기 코드/
-│   ├── bd/
-│   │   └── system/
-│   │       └── system.bd
-│   │
-│   └── imports/
-│       ├── CNN_16_core/
-│       │   ├── CNN_accelerator.v
-│       │   ├── CNN_acc_controller.sv
-│       │   ├── Buffer.sv
-│       │   ├── padding.sv
-│       │   ├── requantize.sv
-│       │   └── int8_weights_conv_fc_be64.mem
-│       │
-│       └── Downloads/
-│           ├── rgb2gray.v
-│           ├── ds_128.v
-│           ├── gray_128x128.v
-│           ├── spi_frame_tx.v
-│           └── jetson_controller.v
-│
-├── CNN testbench/
-│   ├── src/
+src/
+├── fpga/
+│   ├── cnn/
 │   │   ├── CNN_accelerator.v
 │   │   ├── CNN_acc_controller.sv
+│   │   ├── Buffer.sv
+│   │   ├── padding.sv
+│   │   ├── requantize.sv
+│   │   │
 │   │   ├── conv/
+│   │   │   ├── CH.sv
+│   │   │   ├── CH_Result_Buffer.sv
+│   │   │   ├── CH_wrapper.sv
+│   │   │   ├── conv.sv
+│   │   │   ├── Conv_Controller.sv
+│   │   │   ├── Feature_Buffer_Mux.sv
+│   │   │   ├── MaxPool_2x2.sv
+│   │   │   ├── MaxPool_wrapper.sv
+│   │   │   ├── Output_Mux.sv
+│   │   │   ├── Shift_Buffer.sv
+│   │   │   ├── Standalone_MaxPool.sv
+│   │   │   └── Weight_Loader.sv
+│   │   │
 │   │   └── fc/
+│   │       ├── fc.sv
+│   │       ├── fc_controller.sv
+│   │       ├── fc_core.sv
+│   │       ├── fc_memory_adapter.sv
+│   │       ├── fc_output_buffer.sv
+│   │       ├── fc_pe.sv
+│   │       ├── fc_pe_array.sv
+│   │       └── fc_quantizer.sv
 │   │
-│   ├── testbench/
-│   │   └── tb_CNN_all_imge.sv
+│   ├── preprocess/
+│   │   ├── rgb2gray.v
+│   │   ├── ds_128.v
+│   │   └── gray_128x128.v
 │   │
-│   ├── mem_out/
-│   │   ├── person/
-│   │   └── non_person/
+│   ├── interface/
+│   │   ├── jetson_controller.v
+│   │   └── spi_frame_tx.v
 │   │
-│   ├── img2mem.py
-│   ├── filelist.f
-│   └── Makefile
+│   ├── memory/
+│   │   └── int8_weights_conv_fc_be64.mem
+│   │
+│   ├── bd/
+│   │   ├── system.bd
+│   │   └── system_wrapper.vhd
+│   │
+│   └── constraints/
+│       └── *.xdc
 │
-└── python 코드/
+└── jetson/
     ├── gesture_print_b1pro.py
     ├── cnn_image.py
     ├── hand_feature.py
     ├── create_dataset.py
     ├── train_6people.py
     └── niimbot_b1pro.py
+
+verification/
+└── cnn/
+    ├── tb/
+    │   └── tb_CNN_all_imge.sv
+    │
+    ├── scripts/
+    │   ├── img2mem.py
+    │   ├── filelist.f
+    │   └── Makefile
+    │
+    └── test_data/
+        ├── person/
+        │   └── person*.mem
+        └── non_person/
+            └── non_person*.mem
 ```
 
 ### 폴더 설명
 
-| 폴더                              | 내용                                                     |
-| ------------------------------- | ------------------------------------------------------ |
-| `CNN가속기 코드`                     | Z7-20 기반 CNN 가속기와 Pcam 영상 처리 및 통신 RTL                  |
-| `CNN가속기 코드/imports/CNN_16_core` | CNN Controller, Buffer, Requantization 등 가속기 핵심 RTL    |
-| `CNN가속기 코드/imports/Downloads`   | Pcam 영상 전처리, SPI 영상 전송 및 Jetson Handshake RTL          |
-| `CNN testbench/src`             | CNN Convolution / Fully Connected 및 전체 가속기 검증용 RTL     |
-| `CNN testbench/testbench`       | Person / Non-Person Dataset 기반 SystemVerilog Testbench |
-| `CNN testbench/mem_out`         | CNN 검증용 128×128 INT8 Image Memory                      |
-| `python 코드`                     | Jetson 제스처 인식, SPI Viewer, Dataset 학습 및 Printer 제어     |
+| 폴더                           | 내용                                                               |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `src/fpga/cnn`               | INT8 기반 사람 탐지 CNN 가속기의 전체 제어 및 연산 RTL                            |
+| `src/fpga/cnn/conv`          | Convolution, Max Pooling, Weight Loading 및 Feature Buffer 관련 RTL |
+| `src/fpga/cnn/fc`            | Fully Connected Layer 연산 및 Quantization 관련 RTL                   |
+| `src/fpga/preprocess`        | Pcam 입력 영상의 Grayscale 변환 및 128×128 Downscale 전처리                 |
+| `src/fpga/interface`         | FPGA–Jetson SPI 영상 통신 및 GPIO Handshake 제어                        |
+| `src/fpga/memory`            | CNN 연산에 사용하는 INT8 Weight Memory                                  |
+| `src/fpga/bd`                | Zybo Z7-20 기반 Vivado Block Design 및 Top Wrapper                  |
+| `src/fpga/constraints`       | FPGA 핀 및 Timing Constraint 설정                                    |
+| `src/jetson`                 | 제스처 인식, SPI 영상 수신, 데이터셋 생성·학습 및 Photo Printer 제어 Python 코드       |
+| `verification/cnn/tb`        | CNN Person / Non-Person 기능 검증용 SystemVerilog Testbench           |
+| `verification/cnn/scripts`   | 이미지 Memory 변환 및 시뮬레이션 실행을 위한 Script                              |
+| `verification/cnn/test_data` | CNN 검증에 사용하는 Person / Non-Person 128×128 Memory 데이터              |
 
-> Vivado에서 자동 생성되는 IP Cache, Simulation Netlist, `.cache`, `.gen`, `.runs`, `.sim`, `.hw`, `.Xil` 등의 파일은 Git Repository에서 제외하는 것을 권장합니다.
+> Vivado에서 자동 생성되는 `.cache`, `.gen`, `.runs`, `.sim`, `.hw`, `.Xil`, IP 생성 파일 및 Simulation Netlist는 소스코드에서 제외했습니다.
 
 <br>
 
