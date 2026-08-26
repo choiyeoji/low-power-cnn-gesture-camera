@@ -70,19 +70,13 @@ Pcam 5C로 입력된 영상은 Zybo Z7-20 FPGA에서 CNN 입력에 맞는 **128�
 
 Pcam 영상 처리 경로에서 RGB 데이터를 CNN 입력에 사용할 Grayscale 데이터로 변환했습니다.
 
-`rgb2gray.v`에서는 부동소수점 연산 대신 정수 가중치를 사용하여 Grayscale 값을 계산합니다.
+부동소수점 연산 대신 정수 가중치를 사용하여 Grayscale 값을 계산합니다.
 
 ```text
 Gray = (77R + 150G + 29B + 128) / 256
 ```
 
 AXI4-Stream의 `tvalid`, `tready`, `tlast`, `tuser` 신호를 함께 전달하여 영상 Stream의 흐름이 유지되도록 구성했습니다.
-
-관련 RTL:
-
-```text
-src/src/fpga/preprocess/rgb2gray.v
-```
 
 <br>
 
@@ -100,13 +94,7 @@ src/src/fpga/preprocess/rgb2gray.v
 128 × 128 CNN Input
 ```
 
-`ds_128.v`에서는 입력 크기 `1280×720`, Crop 영역 `512×512`, Sampling 간격 `4`를 기준으로 CNN 입력 데이터를 구성합니다.
-
-관련 RTL:
-
-```text
-src/src/fpga/preprocess/ds_128.v
-```
+입력 크기 `1280×720`, Crop 영역 `512×512`, Sampling 간격 `4`를 기준으로 CNN 입력 데이터를 구성합니다.
 
 <br>
 
@@ -132,15 +120,9 @@ CNN Read          SPI Read
 1 Pixel         = 8 bit
 ```
 
-`gray_128x128.v`에서는 16,384 Byte Image Buffer를 Block RAM 형태로 구성하고, CNN Read Address와 SPI Read Address를 각각 받아 데이터를 제공하도록 구현했습니다.
+16,384 Byte Image Buffer를 Block RAM 형태로 구성하고, CNN Read Address와 SPI Read Address를 각각 받아 데이터를 제공하도록 구현했습니다.
 
 CNN 입력 시에는 저장된 8-bit Gray 값에서 `128`을 빼 signed INT8 형태로 전달합니다.
-
-관련 RTL:
-
-```text
-src/src/fpga/preprocess/gray_128x128.v
-```
 
 <br>
 
@@ -159,12 +141,6 @@ SPI Master
 ```
 
 Jetson이 SPI Master로 동작하며, FPGA는 Image Buffer의 주소를 순차적으로 증가시키면서 이미지 데이터를 전달합니다.
-
-관련 RTL:
-
-```text
-src/src/fpga/interface/spi_frame_tx.v
-```
 
 <br>
 
