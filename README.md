@@ -206,29 +206,78 @@ Jetson에서 16 KiB보다 큰 SPI 데이터를 한 번에 읽을 경우 Transact
 
 <br>
 
-# 📂 담당 코드
+# 📂 소스코드 구조
 
-전체 Repository에는 6인 팀 프로젝트의 통합 소스가 포함되어 있으며, 아래 파일은 이 README에서 설명한 **Pcam 영상 처리 및 FPGA–Jetson 이미지 통신**과 직접 연결된 코드입니다.
+전체 Repository에는 6인 팀 프로젝트의 통합 소스가 포함되어 있습니다. 아래에는 **팀 전체 소스 구조를 함께 표시**하고, 제가 담당한 파일은 `← 담당`으로 표시했습니다.
 
 ```text
-src/src/fpga/
-├── preprocess/
-│   ├── rgb2gray.v
-│   ├── ds_128.v
-│   └── gray_128x128.v
+src/
+├── src/
+│   ├── fpga/
+│   │   ├── cnn/
+│   │   │   ├── CNN_accelerator.v
+│   │   │   ├── CNN_acc_controller.sv
+│   │   │   ├── Buffer.sv
+│   │   │   ├── padding.sv
+│   │   │   ├── requantize.sv
+│   │   │   ├── conv/
+│   │   │   │   ├── CH.sv
+│   │   │   │   ├── CH_Result_Buffer.sv
+│   │   │   │   ├── CH_wrapper.sv
+│   │   │   │   ├── conv.sv
+│   │   │   │   ├── Conv_Controller.sv
+│   │   │   │   ├── Feature_Buffer_Mux.sv
+│   │   │   │   ├── MaxPool_2x2.sv
+│   │   │   │   ├── MaxPool_wrapper.sv
+│   │   │   │   ├── Output_Mux.sv
+│   │   │   │   ├── Shift_Buffer.sv
+│   │   │   │   ├── Standalone_MaxPool.sv
+│   │   │   │   └── Weight_Loader.sv
+│   │   │   └── fc/
+│   │   │       ├── fc.sv
+│   │   │       ├── fc_controller.sv
+│   │   │       ├── fc_core.sv
+│   │   │       ├── fc_memory_adapter.sv
+│   │   │       ├── fc_output_buffer.sv
+│   │   │       ├── fc_pe.sv
+│   │   │       ├── fc_pe_array.sv
+│   │   │       └── fc_quantizer.sv
+│   │   ├── preprocess/
+│   │   │   ├── rgb2gray.v              ← 담당
+│   │   │   ├── ds_128.v                ← 담당
+│   │   │   └── gray_128x128.v          ← 담당
+│   │   ├── interface/
+│   │   │   ├── jetson_controller.v
+│   │   │   └── spi_frame_tx.v          ← 담당
+│   │   ├── memory/
+│   │   │   └── int8_weights_conv_fc_be64.mem
+│   │   └── bd/
+│   │       ├── system.bd
+│   │       └── system_wrapper.vhd
+│   └── jetson/
+│       ├── gesture_print_b1pro.py
+│       ├── cnn_image.py
+│       ├── hand_feature.py
+│       ├── create_dataset.py
+│       ├── train_6people.py
+│       └── niimbot_b1pro.py
 │
-└── interface/
-    └── spi_frame_tx.v
+└── verification/
+    └── cnn/
+        ├── tb/
+        │   └── tb_CNN_all_imge.sv
+        ├── scripts/
+        │   ├── img2mem.py
+        │   ├── filelist.f
+        │   └── Makefile
+        └── test_data/
+            ├── person/
+            │   └── person*.mem
+            └── non_person/
+                └── non_person*.mem
 ```
 
-| 파일 | 역할 |
-| --- | --- |
-| `rgb2gray.v` | RGB 영상의 Grayscale 변환 |
-| `ds_128.v` | Center Crop 및 128×128 Downscale |
-| `gray_128x128.v` | 128×128 Image Buffer, CNN/SPI Read 연동 |
-| `spi_frame_tx.v` | FPGA → Jetson SPI Frame 이미지 전송 |
-
-> Repository의 `cnn`, `jetson`, `verification` 등 다른 디렉터리에는 팀 전체 프로젝트의 통합 소스가 포함되어 있습니다.
+> README의 상세 구현 설명은 담당 범위를 중심으로 작성했지만, Repository에는 팀 전체 통합 소스를 그대로 보존했습니다.
 
 <br>
 
