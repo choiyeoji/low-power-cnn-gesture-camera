@@ -162,23 +162,6 @@ Jetson이 SPI Master로 동작하며, FPGA는 Image Buffer의 주소를 순차�
 
 <br>
 
-# ⚠️ 문제 해결
-
-## SPI 16 KiB 전송 문제
-
-Jetson에서 16 KiB보다 큰 SPI 데이터를 한 번에 읽을 경우 Transaction이 분할되면서 CS가 변경되고, FPGA의 Frame Address가 초기화되어 영상 데이터가 처음부터 반복되는 현상을 확인했습니다.
-
-이를 해결하기 위해 다음과 같이 수정했습니다.
-
-- SPI Frame 전체 크기를 **16,384 Byte**로 고정
-- 추가 상태 데이터는 Frame 뒤에 붙이지 않고 마지막 4 Byte에 포함
-- `0xA5` Magic Byte와 XOR Checksum을 이용해 Frame 정렬과 데이터 상태 확인
-- CS가 유지되는 동안 Frame Address를 순차적으로 증가시키고 CS 해제 시 Address를 초기화
-
-이를 통해 128×128 이미지와 상태 데이터를 하나의 고정된 SPI Frame으로 전달하도록 구성했습니다.
-
-<br>
-
 # 🧪 검증 및 결과
 
 담당한 영상 처리 및 이미지 통신 구간을 중심으로 다음 동작을 확인했습니다.
